@@ -10,7 +10,7 @@
         <h1>Made with<br /><em>intention.</em></h1>
       </div>
     </section>
-    <section class="atelier-story">
+    <section v-reveal class="atelier-story">
       <span class="overline">Our point of view</span>
       <p>
         Nocturne is an independent fragrance house in Sofia, creating a small
@@ -24,8 +24,8 @@
 
 <style scoped>
 .atelier-page {
-  background: #f5f2eb;
-  color: #29251f;
+  background: #0a0a09;
+  color: #f5f2eb;
 }
 
 .atelier-hero {
@@ -35,8 +35,8 @@
   align-items: flex-end;
   overflow: hidden;
   padding: clamp(32px, 8vw, 112px);
-  background: #d7d1c5;
-  color: #fbf8f1;
+  background: #0a0a09;
+  color: #f5f2eb;
 }
 
 .atelier-hero::after {
@@ -89,7 +89,7 @@ h1 em {
 }
 
 .atelier-story .overline {
-  color: #927950;
+  color: #c9a96b;
 }
 
 .atelier-story p {
@@ -101,8 +101,8 @@ h1 em {
 
 .story-link {
   padding-bottom: 7px;
-  border-bottom: 1px solid rgba(146, 121, 80, 0.55);
-  color: #665638;
+  border-bottom: 1px solid rgba(201, 169, 107, 0.55);
+  color: #d8c08a;
   font-size: 9px;
   letter-spacing: 0.13em;
   text-decoration: none;

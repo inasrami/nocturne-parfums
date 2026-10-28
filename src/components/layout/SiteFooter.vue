@@ -31,8 +31,8 @@ function backToTop() {
 <style scoped>
 .site-footer {
   padding: 48px clamp(22px, 6vw, 88px) 20px;
-  background: #e9e4da;
-  color: #39342c;
+  background: #151413;
+  color: #ece7dc;
 }
 
 .footer-main,
@@ -65,7 +65,7 @@ function backToTop() {
 }
 
 .footer-brand small {
-  color: #8d7651;
+  color: #c9a96b;
   font-size: 7px;
   letter-spacing: 0.25em;
 }
@@ -78,7 +78,7 @@ function backToTop() {
 
 .footer-links a,
 .back-to-top {
-  color: #71695d;
+  color: #a69e90;
   font-size: 9px;
   letter-spacing: 0.1em;
   text-decoration: none;
@@ -87,15 +87,15 @@ function backToTop() {
 
 .footer-links a:hover,
 .back-to-top:hover {
-  color: #8d7651;
+  color: #c9a96b;
 }
 
 .footer-bottom {
   max-width: 1280px;
   margin: 0 auto;
   padding-top: 16px;
-  border-top: 1px solid rgba(57, 52, 44, 0.16);
-  color: #8c8579;
+  border-top: 1px solid rgba(245, 242, 235, 0.112);
+  color: #8f8879;
   font-size: 8px;
   letter-spacing: 0.08em;
 }

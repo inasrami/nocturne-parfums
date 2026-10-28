@@ -112,8 +112,8 @@ function goToCheckout() {
   height: 100dvh;
   flex-direction: column;
   transform: translateX(102%);
-  background: #f5f2eb;
-  color: #29251f;
+  background: #0a0a09;
+  color: #f5f2eb;
   transition: transform 350ms ease;
 }
 
@@ -126,26 +126,26 @@ function goToCheckout() {
   align-items: center;
   justify-content: space-between;
   padding: 22px 24px;
-  border-bottom: 1px solid rgba(57, 52, 44, 0.15);
+  border-bottom: 1px solid rgba(245, 242, 235, 0.105);
 }
 
 .heading-label {
   display: flex;
   align-items: center;
   gap: 11px;
-  color: #927950;
+  color: #c9a96b;
 }
 
 .heading-label h2 {
   margin: 0;
-  color: #29251f;
+  color: #f5f2eb;
   font-family: "Cormorant Garamond", Georgia, serif;
   font-size: 25px;
   font-weight: 500;
 }
 
 .heading-label > span {
-  color: #817a6e;
+  color: #9b9384;
   font-size: 10px;
 }
 
@@ -155,7 +155,7 @@ function goToCheckout() {
   place-items: center;
   border: 0;
   background: transparent;
-  color: #766f63;
+  color: #a69e90;
   cursor: pointer;
 }
 
@@ -166,21 +166,21 @@ function goToCheckout() {
 
 .shipping-note {
   padding: 14px 24px;
-  border-bottom: 1px solid rgba(57, 52, 44, 0.1);
-  color: #766f63;
+  border-bottom: 1px solid rgba(245, 242, 235, 0.07);
+  color: #a69e90;
   font-size: 9px;
 }
 
 .shipping-track {
   height: 2px;
   margin-top: 11px;
-  background: #ded8cd;
+  background: #2a2824;
 }
 
 .shipping-track span {
   display: block;
   height: 100%;
-  background: #927950;
+  background: #c9a96b;
   transition: width 250ms ease;
 }
 
@@ -197,7 +197,7 @@ function goToCheckout() {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #a39a8b;
+  color: #8f8879;
   text-align: center;
 }
 
@@ -209,7 +209,7 @@ function goToCheckout() {
 }
 
 .empty-cart a {
-  color: #665638;
+  color: #d8c08a;
   font-size: 9px;
   letter-spacing: 0.12em;
   text-decoration: none;
@@ -221,7 +221,7 @@ function goToCheckout() {
   grid-template-columns: 76px 1fr;
   gap: 16px;
   padding-bottom: 18px;
-  border-bottom: 1px solid rgba(57, 52, 44, 0.12);
+  border-bottom: 1px solid rgba(245, 242, 235, 0.084);
 }
 
 .cart-item + .cart-item {
@@ -232,7 +232,7 @@ function goToCheckout() {
   width: 76px;
   height: 92px;
   object-fit: cover;
-  background: #e9e4da;
+  background: #151413;
 }
 
 .item-info {
@@ -251,7 +251,7 @@ function goToCheckout() {
 
 .item-info p {
   margin: 5px 0 0;
-  color: #817a6e;
+  color: #9b9384;
   font-size: 9px;
   letter-spacing: 0.1em;
 }
@@ -266,7 +266,7 @@ function goToCheckout() {
   display: flex;
   align-items: center;
   gap: 12px;
-  border: 1px solid rgba(57, 52, 44, 0.18);
+  border: 1px solid rgba(245, 242, 235, 0.126);
   padding: 3px 6px;
 }
 
@@ -275,7 +275,7 @@ function goToCheckout() {
 }
 
 .item-controls strong {
-  color: #665638;
+  color: #d8c08a;
   font-family: "Cormorant Garamond", Georgia, serif;
   font-size: 17px;
   font-weight: 500;
@@ -283,7 +283,7 @@ function goToCheckout() {
 
 .drawer-footer {
   padding: 18px 24px 24px;
-  border-top: 1px solid rgba(57, 52, 44, 0.15);
+  border-top: 1px solid rgba(245, 242, 235, 0.105);
 }
 
 .promo-row {
@@ -295,18 +295,18 @@ function goToCheckout() {
   min-width: 0;
   flex: 1;
   padding: 10px;
-  border: 1px solid rgba(57, 52, 44, 0.18);
+  border: 1px solid rgba(245, 242, 235, 0.126);
   border-radius: 0;
   background: transparent;
-  color: #29251f;
+  color: #f5f2eb;
   font-size: 9px;
 }
 
 .promo-row button {
   padding: 0 13px;
-  border: 1px solid #927950;
+  border: 1px solid #c9a96b;
   background: transparent;
-  color: #665638;
+  color: #d8c08a;
   cursor: pointer;
   font-size: 8px;
   letter-spacing: 0.1em;
@@ -320,18 +320,18 @@ function goToCheckout() {
 }
 
 .promo-error {
-  color: #a04e44;
+  color: #e0958a;
 }
 
 .promo-success {
-  color: #665638;
+  color: #d8c08a;
 }
 
 .totals {
   display: grid;
   gap: 8px;
   margin-top: 16px;
-  color: #766f63;
+  color: #a69e90;
   font-size: 10px;
 }
 
@@ -344,12 +344,12 @@ function goToCheckout() {
   align-items: center;
   margin-top: 4px;
   padding-top: 12px;
-  border-top: 1px solid rgba(57, 52, 44, 0.15);
-  color: #29251f;
+  border-top: 1px solid rgba(245, 242, 235, 0.105);
+  color: #f5f2eb;
 }
 
 .total-row strong {
-  color: #665638;
+  color: #d8c08a;
   font-family: "Cormorant Garamond", Georgia, serif;
   font-size: 21px;
   font-weight: 500;
@@ -359,9 +359,9 @@ function goToCheckout() {
   width: 100%;
   min-height: 48px;
   margin-top: 16px;
-  border: 1px solid #29251f;
-  background: #29251f;
-  color: #f5f2eb;
+  border: 1px solid #f5f2eb;
+  background: #f5f2eb;
+  color: #0a0a09;
   cursor: pointer;
   font-size: 9px;
   letter-spacing: 0.12em;

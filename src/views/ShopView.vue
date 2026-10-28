@@ -21,7 +21,7 @@ const filteredProducts = computed(() => {
 
 <template>
   <div class="shop-page">
-    <header class="shop-intro">
+    <header v-reveal class="shop-intro">
       <span class="overline">Nocturne parfums</span>
       <h1>The collection</h1>
       <p>Four distinct expressions. Find the one that feels like you.</p>
@@ -50,7 +50,7 @@ const filteredProducts = computed(() => {
       </div>
 
       <div class="product-grid">
-        <article v-for="product in filteredProducts" :key="product.id" class="product-card">
+        <article v-for="(product, index) in filteredProducts" :key="product.id" v-reveal="(index % 4) * 100" class="product-card">
           <router-link :to="`/product/${product.id}`" class="product-image">
             <img :src="product.images[0]" :alt="product.name" loading="lazy" />
             <span v-if="product.isNew" class="new-label">New</span>
@@ -76,18 +76,18 @@ const filteredProducts = computed(() => {
 <style scoped>
 .shop-page {
   min-height: 100%;
-  background: #f5f2eb;
-  color: #29251f;
+  background: #0a0a09;
+  color: #f5f2eb;
 }
 
 .shop-intro {
   padding: 78px 24px 54px;
-  background: #ede8de;
+  background: #12110f;
   text-align: center;
 }
 
 .overline {
-  color: #927950;
+  color: #c9a96b;
   font-size: 9px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -104,7 +104,7 @@ const filteredProducts = computed(() => {
 
 .shop-intro p {
   margin: 0;
-  color: #817a6e;
+  color: #9b9384;
   font-size: 11px;
   letter-spacing: 0.03em;
 }
@@ -122,7 +122,7 @@ const filteredProducts = computed(() => {
   gap: 20px;
   margin-bottom: 27px;
   padding-bottom: 15px;
-  border-bottom: 1px solid rgba(57, 52, 44, 0.17);
+  border-bottom: 1px solid rgba(245, 242, 235, 0.119);
 }
 
 .category-list {
@@ -134,7 +134,7 @@ const filteredProducts = computed(() => {
 .category-list button,
 .sort-control,
 .sort-control select {
-  color: #766f63;
+  color: #a69e90;
   font-family: inherit;
   font-size: 9px;
   letter-spacing: 0.1em;
@@ -151,8 +151,8 @@ const filteredProducts = computed(() => {
 }
 
 .category-list button.active {
-  border-color: #927950;
-  color: #55462e;
+  border-color: #c9a96b;
+  color: #e6d3a8;
 }
 
 .sort-control {
@@ -165,7 +165,7 @@ const filteredProducts = computed(() => {
   padding: 6px 20px 6px 0;
   border: 0;
   background: transparent;
-  color: #39342c;
+  color: #ece7dc;
   cursor: pointer;
 }
 
@@ -188,7 +188,7 @@ const filteredProducts = computed(() => {
   display: block;
   overflow: hidden;
   aspect-ratio: 0.8;
-  background: #e9e4da;
+  background: #151413;
 }
 
 .product-image img {
@@ -207,8 +207,8 @@ const filteredProducts = computed(() => {
   top: 13px;
   right: 13px;
   padding: 7px 9px;
-  background: rgba(245, 242, 235, 0.94);
-  color: #5f5139;
+  background: rgba(10, 10, 9, 0.94);
+  color: #d8c08a;
   font-size: 8px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -263,7 +263,7 @@ const filteredProducts = computed(() => {
 
 .product-title p {
   margin: 7px 0 0;
-  color: #817a6e;
+  color: #9b9384;
   font-size: 9px;
 }
 
@@ -273,8 +273,8 @@ const filteredProducts = computed(() => {
   justify-content: space-between;
   margin-top: 12px;
   padding-top: 10px;
-  border-top: 1px solid rgba(57, 52, 44, 0.15);
-  color: #665638;
+  border-top: 1px solid rgba(245, 242, 235, 0.105);
+  color: #d8c08a;
   font-family: "Cormorant Garamond", Georgia, serif;
   font-size: 18px;
 }
@@ -282,9 +282,9 @@ const filteredProducts = computed(() => {
 .product-buy button {
   padding: 7px 0;
   border: 0;
-  border-bottom: 1px solid rgba(146, 121, 80, 0.45);
+  border-bottom: 1px solid rgba(201, 169, 107, 0.45);
   background: transparent;
-  color: #665638;
+  color: #d8c08a;
   cursor: pointer;
   font-family: Inter, sans-serif;
   font-size: 8px;
@@ -295,7 +295,7 @@ const filteredProducts = computed(() => {
 .empty-state {
   grid-column: 1 / -1;
   padding: 80px 0;
-  color: #817a6e;
+  color: #9b9384;
   text-align: center;
 }
 

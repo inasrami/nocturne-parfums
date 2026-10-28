@@ -1,7 +1,8 @@
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
 import { useShopStore } from "../stores/shopStore";
 import { ArrowLeft, ShoppingBag } from "lucide-vue-next";
+import NotesStage from "../components/product/NotesStage.vue";
 
 const props = defineProps({ id: String });
 const store = useShopStore();
@@ -9,18 +10,35 @@ const product = computed(() => store.perfumes.find((item) => item.id === props.i
 const selectedSize = ref("50ml");
 const activeImageIndex = ref(0);
 
+const variant = computed(() => product.value.variants.find((v) => v.size === selectedSize.value));
+const activePrice = computed(() => (variant.value ? variant.value.price : product.value.basePrice));
+const soldOut = computed(() => !variant.value || variant.value.stock === 0);
+const lowStock = computed(() => !soldOut.value && variant.value.stock <= 6);
+const related = computed(() =>
+  (product.value.completeTheLookIds || []).map((id) => store.perfumes.find((p) => p.id === id)).filter(Boolean),
+);
+
 watch(
   () => props.id,
   () => {
     selectedSize.value = "50ml";
     activeImageIndex.value = 0;
+    window.scrollTo(0, 0);
   },
 );
 
-const activePrice = computed(() => {
-  const variant = product.value.variants.find((item) => item.size === selectedSize.value);
-  return variant ? variant.price : product.value.basePrice;
+// Sticky add-to-bag bar once the main button has scrolled out of view (above the viewport).
+const addButton = ref(null);
+const showBar = ref(false);
+let observer;
+onMounted(() => {
+  observer = new IntersectionObserver(
+    ([entry]) => (showBar.value = !entry.isIntersecting && entry.boundingClientRect.top < 0),
+    { rootMargin: "0px" },
+  );
+  if (addButton.value) observer.observe(addButton.value);
 });
+onBeforeUnmount(() => observer?.disconnect());
 </script>
 
 <template>
@@ -45,7 +63,7 @@ const activePrice = computed(() => {
 
       <section class="product-info">
         <router-link to="/shop" class="back-link">
-          <ArrowLeft class="w-4 h-4" /> Collection
+          <ArrowLeft class="w-4 h-4" /> {{ store.t.shop }}
         </router-link>
         <span class="overline">{{ product.subtitle[store.locale] }}</span>
         <h1>{{ product.name }}</h1>
@@ -54,51 +72,72 @@ const activePrice = computed(() => {
 
         <div class="size-picker">
           <div class="label-row">
-            <span>Size</span>
-            <span>{{ selectedSize }}</span>
+            <span>{{ store.t.size }}</span>
+            <span v-if="lowStock" class="low-stock">{{ store.t.onlyLeft(variant.stock) }}</span>
+            <span v-else>{{ selectedSize }}</span>
           </div>
           <div class="size-options">
             <button
-              v-for="variant in product.variants"
-              :key="variant.size"
-              :class="{ active: selectedSize === variant.size }"
-              @click="selectedSize = variant.size"
+              v-for="v in product.variants"
+              :key="v.size"
+              :class="{ active: selectedSize === v.size }"
+              :disabled="v.stock === 0"
+              @click="selectedSize = v.size"
             >
-              {{ variant.size }}
+              {{ v.size }}
             </button>
           </div>
         </div>
 
-        <button class="add-to-bag" @click="store.addToCart(product, selectedSize)">
-          <ShoppingBag class="w-4 h-4" /> Add to bag
+        <button ref="addButton" class="add-to-bag" :disabled="soldOut" @click="store.addToCart(product, selectedSize)">
+          <ShoppingBag class="w-4 h-4" /> {{ soldOut ? store.t.soldOut : store.t.addToBag }}
         </button>
 
         <div class="fragrance-notes">
-          <h2>Fragrance notes</h2>
-          <div>
-            <span>Top</span>
-            <p>{{ product.notes.top[store.locale].join(" · ") }}</p>
-          </div>
-          <div>
-            <span>Heart</span>
-            <p>{{ product.notes.heart[store.locale].join(" · ") }}</p>
-          </div>
-          <div>
-            <span>Base</span>
-            <p>{{ product.notes.base[store.locale].join(" · ") }}</p>
+          <h2>{{ store.t.notesTitle }}</h2>
+          <div v-for="key in ['top', 'heart', 'base']" :key="key">
+            <span>{{ store.t[key] }}</span>
+            <p>{{ product.notes[key][store.locale].join(" · ") }}</p>
           </div>
         </div>
-        <p class="delivery-note">Complimentary delivery on orders over 300 {{ store.t.currency }}.</p>
+        <p class="delivery-note">{{ store.t.deliveryNote(300) }}</p>
       </section>
     </div>
+
+    <NotesStage :key="product.id" :product="product" />
+
+    <section v-if="related.length" class="complete-look">
+      <h2>{{ store.t.completeLook }}</h2>
+      <div class="look-grid">
+        <router-link v-for="item in related" :key="item.id" :to="`/product/${item.id}`" class="look-card">
+          <img :src="item.images[0]" :alt="item.name" loading="lazy" />
+          <div>
+            <h3>{{ item.name }}</h3>
+            <span>{{ item.basePrice }} {{ store.t.currency }}</span>
+          </div>
+        </router-link>
+      </div>
+    </section>
+
+    <Transition name="bar">
+      <div v-if="showBar" class="sticky-bar">
+        <div>
+          <strong>{{ product.name }}</strong>
+          <span>{{ selectedSize }} · {{ activePrice }} {{ store.t.currency }}</span>
+        </div>
+        <button :disabled="soldOut" @click="store.addToCart(product, selectedSize)">
+          <ShoppingBag class="w-4 h-4" /> {{ soldOut ? store.t.soldOut : store.t.addToBag }}
+        </button>
+      </div>
+    </Transition>
   </div>
 </template>
 
 <style scoped>
 .product-page {
   min-height: 100%;
-  background: #f5f2eb;
-  color: #29251f;
+  background: #0a0a09;
+  color: #f5f2eb;
 }
 
 .product-layout {
@@ -117,7 +156,7 @@ const activePrice = computed(() => {
 .main-image {
   overflow: hidden;
   aspect-ratio: 0.91;
-  background: #e9e4da;
+  background: #151413;
 }
 
 .main-image img {
@@ -138,12 +177,12 @@ const activePrice = computed(() => {
   aspect-ratio: 1;
   padding: 0;
   border: 1px solid transparent;
-  background: #e9e4da;
+  background: #151413;
   cursor: pointer;
 }
 
 .thumbnail-list button.active {
-  border-color: #927950;
+  border-color: #c9a96b;
 }
 
 .thumbnail-list img {
@@ -162,7 +201,7 @@ const activePrice = computed(() => {
   align-items: center;
   gap: 8px;
   margin-bottom: 48px;
-  color: #766f63;
+  color: #a69e90;
   font-size: 9px;
   letter-spacing: 0.1em;
   text-decoration: none;
@@ -170,7 +209,7 @@ const activePrice = computed(() => {
 }
 
 .overline {
-  color: #927950;
+  color: #c9a96b;
   font-size: 9px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -187,7 +226,7 @@ const activePrice = computed(() => {
 
 .price {
   margin: 15px 0 0;
-  color: #665638;
+  color: #d8c08a;
   font-family: "Cormorant Garamond", Georgia, serif;
   font-size: 25px;
 }
@@ -195,21 +234,21 @@ const activePrice = computed(() => {
 .description {
   max-width: 420px;
   margin: 24px 0 30px;
-  color: #716b60;
+  color: #a69e90;
   font-size: 12px;
   line-height: 1.8;
 }
 
 .size-picker {
   padding: 18px 0;
-  border-top: 1px solid rgba(57, 52, 44, 0.17);
-  border-bottom: 1px solid rgba(57, 52, 44, 0.17);
+  border-top: 1px solid rgba(245, 242, 235, 0.119);
+  border-bottom: 1px solid rgba(245, 242, 235, 0.119);
 }
 
 .label-row {
   display: flex;
   justify-content: space-between;
-  color: #766f63;
+  color: #a69e90;
   font-size: 9px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -224,17 +263,17 @@ const activePrice = computed(() => {
 .size-options button {
   min-width: 84px;
   padding: 11px 18px;
-  border: 1px solid rgba(57, 52, 44, 0.2);
+  border: 1px solid rgba(245, 242, 235, 0.14);
   background: transparent;
-  color: #766f63;
+  color: #a69e90;
   cursor: pointer;
   font-size: 10px;
   letter-spacing: 0.08em;
 }
 
 .size-options button.active {
-  border-color: #927950;
-  color: #55462e;
+  border-color: #c9a96b;
+  color: #e6d3a8;
 }
 
 .add-to-bag {
@@ -245,9 +284,9 @@ const activePrice = computed(() => {
   justify-content: center;
   gap: 11px;
   margin-top: 20px;
-  border: 1px solid #29251f;
-  background: #29251f;
-  color: #f5f2eb;
+  border: 1px solid #f5f2eb;
+  background: #f5f2eb;
+  color: #0a0a09;
   cursor: pointer;
   font-size: 9px;
   letter-spacing: 0.15em;
@@ -257,7 +296,7 @@ const activePrice = computed(() => {
 
 .add-to-bag:hover {
   background: transparent;
-  color: #29251f;
+  color: #f5f2eb;
 }
 
 .fragrance-notes {
@@ -276,25 +315,25 @@ const activePrice = computed(() => {
   grid-template-columns: 58px 1fr;
   gap: 12px;
   padding: 11px 0;
-  border-top: 1px solid rgba(57, 52, 44, 0.13);
+  border-top: 1px solid rgba(245, 242, 235, 0.091);
 }
 
 .fragrance-notes span,
 .fragrance-notes p {
   margin: 0;
-  color: #766f63;
+  color: #a69e90;
   font-size: 10px;
   line-height: 1.6;
 }
 
 .fragrance-notes span {
-  color: #927950;
+  color: #c9a96b;
   text-transform: uppercase;
 }
 
 .delivery-note {
   margin-top: 22px;
-  color: #8c8579;
+  color: #8f8879;
   font-size: 9px;
 }
 
@@ -312,5 +351,107 @@ const activePrice = computed(() => {
   .back-link {
     margin-bottom: 26px;
   }
+}
+</style>
+
+<style scoped>
+.low-stock {
+  color: #e0a070;
+}
+.size-options button:disabled,
+.add-to-bag:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+.complete-look {
+  width: min(100% - 64px, 1440px);
+  margin: 0 auto;
+  padding: 72px 0 96px;
+}
+.complete-look h2 {
+  margin: 0 0 28px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 36px;
+  font-weight: 400;
+}
+.look-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 280px));
+  gap: 24px;
+}
+.look-card {
+  color: inherit;
+  text-decoration: none;
+}
+.look-card img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  background: #151413;
+}
+.look-card > div {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12px;
+}
+.look-card h3 {
+  margin: 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 22px;
+  font-weight: 500;
+}
+.look-card span {
+  color: #d8c08a;
+  font-size: 12px;
+}
+.sticky-bar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px clamp(16px, 4vw, 64px) calc(12px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid rgba(245, 242, 235, 0.105);
+  background: rgba(10, 10, 9, 0.96);
+  backdrop-filter: blur(12px);
+}
+.sticky-bar strong {
+  display: block;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 20px;
+  font-weight: 500;
+}
+.sticky-bar span {
+  color: #a69e90;
+  font-size: 10px;
+}
+.sticky-bar button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 26px;
+  border: 0;
+  background: #f5f2eb;
+  color: #0a0a09;
+  cursor: pointer;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.sticky-bar button:disabled {
+  opacity: 0.4;
+}
+.bar-enter-active,
+.bar-leave-active {
+  transition: transform 260ms ease, opacity 260ms ease;
+}
+.bar-enter-from,
+.bar-leave-to {
+  transform: translateY(100%);
+  opacity: 0;
 }
 </style>

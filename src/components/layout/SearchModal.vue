@@ -69,7 +69,7 @@ function selectItem(id) {
   justify-content: center;
   overflow-y: auto;
   padding: 18vh 24px 48px;
-  background: rgba(245, 242, 235, 0.97);
+  background: rgba(10, 10, 9, 0.97);
 }
 
 .close-button {
@@ -80,10 +80,10 @@ function selectItem(id) {
   width: 40px;
   height: 40px;
   place-items: center;
-  border: 1px solid rgba(57, 52, 44, 0.18);
+  border: 1px solid rgba(245, 242, 235, 0.126);
   border-radius: 50%;
   background: transparent;
-  color: #39342c;
+  color: #ece7dc;
   cursor: pointer;
 }
 
@@ -96,8 +96,8 @@ function selectItem(id) {
   align-items: center;
   gap: 14px;
   padding: 0 0 13px;
-  border-bottom: 1px solid #927950;
-  color: #927950;
+  border-bottom: 1px solid #c9a96b;
+  color: #c9a96b;
 }
 
 .search-field input {
@@ -105,13 +105,13 @@ function selectItem(id) {
   border: 0;
   outline: 0;
   background: transparent;
-  color: #29251f;
+  color: #f5f2eb;
   font-family: "Cormorant Garamond", Georgia, serif;
   font-size: clamp(24px, 4vw, 36px);
 }
 
 .search-field input::placeholder {
-  color: #aaa295;
+  color: #8f8879;
 }
 
 .search-results {
@@ -126,22 +126,22 @@ function selectItem(id) {
   gap: 14px;
   padding: 12px 0;
   border: 0;
-  border-bottom: 1px solid rgba(57, 52, 44, 0.12);
+  border-bottom: 1px solid rgba(245, 242, 235, 0.084);
   background: transparent;
-  color: #29251f;
+  color: #f5f2eb;
   cursor: pointer;
   text-align: left;
 }
 
 .search-result:hover strong {
-  color: #927950;
+  color: #c9a96b;
 }
 
 .search-result img {
   width: 56px;
   height: 66px;
   object-fit: cover;
-  background: #e9e4da;
+  background: #151413;
 }
 
 .search-result > span:nth-child(2) {
@@ -160,7 +160,7 @@ function selectItem(id) {
 .result-price,
 .no-results,
 .search-hint {
-  color: #817a6e;
+  color: #9b9384;
   font-size: 9px;
 }
 
@@ -179,7 +179,7 @@ function selectItem(id) {
 }
 
 .search-hint a {
-  color: #665638;
+  color: #d8c08a;
   text-decoration: none;
 }
 </style>

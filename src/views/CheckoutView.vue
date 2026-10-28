@@ -124,8 +124,8 @@ function submitOrder() {
 <style scoped>
 .checkout-page {
   min-height: 100%;
-  background: #f5f2eb;
-  color: #29251f;
+  background: #0a0a09;
+  color: #f5f2eb;
 }
 
 .checkout-content {
@@ -139,7 +139,7 @@ function submitOrder() {
 }
 
 .overline {
-  color: #927950;
+  color: #c9a96b;
   font-size: 9px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -169,7 +169,7 @@ function submitOrder() {
 
 .form-section {
   padding-bottom: 26px;
-  border-bottom: 1px solid rgba(57, 52, 44, 0.16);
+  border-bottom: 1px solid rgba(245, 242, 235, 0.112);
 }
 
 .form-section h2,
@@ -188,7 +188,7 @@ function submitOrder() {
 .form-section label > span {
   display: block;
   margin-bottom: 7px;
-  color: #766f63;
+  color: #a69e90;
   font-size: 9px;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -198,10 +198,10 @@ function submitOrder() {
   width: 100%;
   min-height: 43px;
   padding: 10px 12px;
-  border: 1px solid rgba(57, 52, 44, 0.2);
+  border: 1px solid rgba(245, 242, 235, 0.14);
   border-radius: 0;
   background: rgba(255, 255, 255, 0.32);
-  color: #29251f;
+  color: #f5f2eb;
   font: inherit;
   font-size: 12px;
 }
@@ -222,9 +222,9 @@ function submitOrder() {
 .delivery-options button {
   min-width: 106px;
   padding: 11px 20px;
-  border: 1px solid rgba(57, 52, 44, 0.2);
+  border: 1px solid rgba(245, 242, 235, 0.14);
   background: transparent;
-  color: #766f63;
+  color: #a69e90;
   cursor: pointer;
   font-size: 9px;
   letter-spacing: 0.1em;
@@ -232,8 +232,8 @@ function submitOrder() {
 }
 
 .delivery-options button.active {
-  border-color: #927950;
-  color: #55462e;
+  border-color: #c9a96b;
+  color: #e6d3a8;
 }
 
 .payment-section {
@@ -245,20 +245,20 @@ function submitOrder() {
   display: flex;
   justify-content: space-between;
   padding: 15px 0;
-  border-top: 1px solid rgba(57, 52, 44, 0.16);
-  border-bottom: 1px solid rgba(57, 52, 44, 0.16);
-  color: #625a4d;
+  border-top: 1px solid rgba(245, 242, 235, 0.112);
+  border-bottom: 1px solid rgba(245, 242, 235, 0.112);
+  color: #a69e90;
   font-size: 11px;
 }
 
 .payment-method span:last-child {
-  color: #927950;
+  color: #c9a96b;
 }
 
 .order-summary {
   align-self: start;
   padding: 22px;
-  background: #ede8de;
+  background: #12110f;
 }
 
 .summary-item {
@@ -267,14 +267,14 @@ function submitOrder() {
   align-items: center;
   gap: 12px;
   padding: 13px 0;
-  border-top: 1px solid rgba(57, 52, 44, 0.13);
+  border-top: 1px solid rgba(245, 242, 235, 0.091);
 }
 
 .summary-item img {
   width: 52px;
   height: 62px;
   object-fit: cover;
-  background: #e2dcd0;
+  background: #2a2824;
 }
 
 .summary-item div {
@@ -290,18 +290,18 @@ function submitOrder() {
 }
 
 .summary-item span {
-  color: #766f63;
+  color: #a69e90;
   font-size: 9px;
 }
 
 .empty-cart {
   padding: 16px 0;
-  color: #766f63;
+  color: #a69e90;
   font-size: 11px;
 }
 
 .empty-cart a {
-  color: #665638;
+  color: #d8c08a;
 }
 
 .summary-total {
@@ -309,12 +309,12 @@ function submitOrder() {
   justify-content: space-between;
   margin-top: 12px;
   padding-top: 16px;
-  border-top: 1px solid rgba(57, 52, 44, 0.2);
+  border-top: 1px solid rgba(245, 242, 235, 0.14);
   font-size: 11px;
 }
 
 .summary-total strong {
-  color: #665638;
+  color: #d8c08a;
   font-family: "Cormorant Garamond", Georgia, serif;
   font-size: 21px;
   font-weight: 500;
@@ -325,9 +325,9 @@ function submitOrder() {
   width: 100%;
   min-height: 48px;
   margin-top: 18px;
-  border: 1px solid #29251f;
-  background: #29251f;
-  color: #f5f2eb;
+  border: 1px solid #f5f2eb;
+  background: #f5f2eb;
+  color: #0a0a09;
   cursor: pointer;
   font-size: 9px;
   letter-spacing: 0.14em;
@@ -355,9 +355,9 @@ function submitOrder() {
   height: 48px;
   place-items: center;
   margin-bottom: 20px;
-  border: 1px solid #b9a67e;
+  border: 1px solid #c9a96b;
   border-radius: 50%;
-  color: #927950;
+  color: #c9a96b;
 }
 
 .order-confirmation h1 {
@@ -366,7 +366,7 @@ function submitOrder() {
 }
 
 .order-confirmation p {
-  color: #766f63;
+  color: #a69e90;
   font-size: 12px;
 }
 

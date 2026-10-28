@@ -4,12 +4,13 @@ export default {
   theme: {
     extend: {
       colors: {
-        obsidian: "#F5F2EB",
-        charcoal: "#EDE8DE",
+        obsidian: "#0A0A09",
+        charcoal: "#151413",
+        ivory: "#F5F2EB",
         gold: {
-          DEFAULT: "#927950",
+          DEFAULT: "#C9A96B",
           light: "#D9C49C",
-          muted: "#766344",
+          muted: "#8F7A4E",
         },
       },
       fontFamily: {

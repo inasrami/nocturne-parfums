@@ -1,200 +1,277 @@
 <script setup>
-import { useShopStore } from "../../stores/shopStore";
+import { onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { useRoute } from "vue-router";
 import { Search, ShoppingBag } from "lucide-vue-next";
+import { useShopStore } from "../../stores/shopStore";
 
 const store = useShopStore();
+const route = useRoute();
+const menuOpen = ref(false);
+const hidden = ref(false);
+const solid = ref(false);
+let lastY = 0;
+
+// Transparent over the hero, hides while scrolling down, returns on scroll up.
+function onScroll() {
+  const y = window.scrollY;
+  solid.value = y > 40;
+  if (Math.abs(y - lastY) < 4) return;
+  hidden.value = y > 160 && y > lastY && !menuOpen.value;
+  lastY = y;
+}
+const onKey = (e) => e.key === "Escape" && (menuOpen.value = false);
+
+onMounted(() => {
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("keydown", onKey);
+  onScroll();
+});
+onBeforeUnmount(() => {
+  window.removeEventListener("scroll", onScroll);
+  window.removeEventListener("keydown", onKey);
+  document.documentElement.style.overflow = "";
+});
+
+watch(() => route.fullPath, () => (menuOpen.value = false));
+watch(menuOpen, (open) => {
+  document.documentElement.style.overflow = open ? "hidden" : "";
+  if (open) hidden.value = false;
+});
 </script>
 
 <template>
-  <header class="site-header sticky top-0 z-40">
-    <div class="navigation-shell">
-      <nav class="primary-nav" aria-label="Main navigation">
-        <router-link to="/shop">{{ store.t.shop }}</router-link>
-        <router-link to="/atelier">{{ store.t.story }}</router-link>
-      </nav>
+  <header class="site-header" :class="{ hidden, solid: solid || menuOpen }">
+    <div class="bar">
+      <button class="menu-btn" :aria-expanded="menuOpen" @click="menuOpen = !menuOpen">
+        <span class="lines" :class="{ open: menuOpen }"><i /><i /></span>
+        <span>{{ menuOpen ? store.t.close : store.t.menu }}</span>
+      </button>
 
       <router-link to="/" class="brand-mark" aria-label="Nocturne home">
         <span>NOCTURNE</span>
         <small>PARFUMS · SOFIA</small>
       </router-link>
 
-      <div class="nav-actions">
-        <button @click="store.toggleLocale" class="locale-action" aria-label="Change language">
-          <span>{{ store.locale }}</span>
-        </button>
-
-        <button @click="store.isSearchOpen = true" class="icon-action" aria-label="Search">
-          <Search class="w-5 h-5" />
-        </button>
-
-        <button @click="store.isCartOpen = true" class="icon-action bag-action" aria-label="Open shopping bag">
+      <div class="actions">
+        <button class="locale" aria-label="Change language" @click="store.toggleLocale">{{ store.locale }}</button>
+        <button aria-label="Search" @click="store.isSearchOpen = true"><Search class="w-5 h-5" /></button>
+        <button class="bag" aria-label="Open shopping bag" @click="store.isCartOpen = true">
           <ShoppingBag class="w-5 h-5" />
-          <span v-if="store.cartCount > 0" class="bag-count">
-            {{ store.cartCount }}
-          </span>
-          <span class="bag-label">Bag</span>
+          <span v-if="store.cartCount > 0" class="count">{{ store.cartCount }}</span>
         </button>
       </div>
     </div>
   </header>
+
+  <Transition name="menu">
+    <nav v-if="menuOpen" class="menu-overlay" aria-label="Main navigation">
+      <div class="menu-inner">
+        <router-link to="/shop" class="big" style="--i: 0">{{ store.t.shop }}</router-link>
+        <router-link to="/atelier" class="big" style="--i: 1">{{ store.t.story }}</router-link>
+        <div class="scents">
+          <router-link
+            v-for="(p, i) in store.perfumes"
+            :key="p.id"
+            :to="`/product/${p.id}`"
+            :style="{ '--i': i + 2, '--accent': p.accentColor }"
+          >
+            <i /> {{ p.name }}
+          </router-link>
+        </div>
+      </div>
+    </nav>
+  </Transition>
 </template>
 
 <style scoped>
 .site-header {
-  color: #39342c;
-  background: rgba(245, 242, 235, 0.97);
-  border-bottom: 1px solid rgba(57, 52, 44, 0.12);
-  backdrop-filter: blur(12px);
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 40;
+  color: #f5f2eb;
+  border-bottom: 1px solid transparent;
+  transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1), background 400ms ease, border-color 400ms ease;
 }
-
-.navigation-shell {
-  position: relative;
+.site-header.solid {
+  background: rgba(10, 10, 9, 0.78);
+  border-color: rgba(245, 242, 235, 0.08);
+  backdrop-filter: blur(14px);
+}
+.site-header.hidden {
+  transform: translateY(-100%);
+}
+.bar {
   display: grid;
-  width: min(100% - 64px, 1440px);
-  height: 78px;
+  height: 72px;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  margin: 0 auto;
+  padding: 0 clamp(20px, 4vw, 56px);
 }
-
-.primary-nav,
-.nav-actions {
-  display: flex;
+button {
+  display: inline-flex;
   align-items: center;
-}
-
-.primary-nav {
-  gap: 30px;
-}
-
-.primary-nav a,
-.locale-action,
-.bag-label {
-  color: #71695d;
+  gap: 10px;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
   font-size: 9px;
-  letter-spacing: 0.15em;
-  text-decoration: none;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  transition: color 180ms ease;
+  transition: color 250ms ease;
 }
-
-.primary-nav a:hover,
-.locale-action:hover,
-.icon-action:hover {
-  color: #927950;
+button:hover {
+  color: #c9a96b;
 }
-
+.menu-btn {
+  justify-self: start;
+}
+.lines {
+  display: grid;
+  width: 22px;
+  gap: 6px;
+}
+.lines i {
+  display: block;
+  height: 1px;
+  background: currentColor;
+  transition: transform 350ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.lines.open i:first-child {
+  transform: translateY(3.5px) rotate(45deg);
+}
+.lines.open i:last-child {
+  transform: translateY(-3.5px) rotate(-45deg);
+}
 .brand-mark {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
-  color: #29251f;
+  gap: 4px;
+  color: inherit;
   text-decoration: none;
 }
-
 .brand-mark span {
   font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: 29px;
-  font-weight: 500;
-  letter-spacing: 0.24em;
+  font-size: 24px;
+  letter-spacing: 0.3em;
   line-height: 0.9;
+  padding-left: 0.3em;
 }
-
 .brand-mark small {
-  color: #927950;
+  color: #c9a96b;
   font-size: 7px;
-  letter-spacing: 0.28em;
+  letter-spacing: 0.3em;
 }
-
-.nav-actions {
-  justify-content: flex-end;
+.actions {
+  display: flex;
+  align-items: center;
+  justify-self: end;
   gap: 20px;
 }
-
-.locale-action,
-.icon-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  padding: 6px 0;
-  border: 0;
-  background: transparent;
-  color: #71695d;
-  cursor: pointer;
-  transition: color 180ms ease;
-}
-
-.icon-action {
+.bag {
   position: relative;
-  padding: 6px;
 }
-
-.icon-action svg {
-  width: 17px;
-  height: 17px;
-  stroke-width: 1.4;
-}
-
-.bag-action {
-  gap: 9px;
-}
-
-.bag-count {
+.count {
   position: absolute;
-  top: -1px;
-  right: -2px;
+  top: -7px;
+  right: -9px;
   display: grid;
   width: 15px;
   height: 15px;
   place-items: center;
   border-radius: 50%;
-  background: #927950;
-  color: #fffdf8;
-  font-size: 9px;
+  background: #c9a96b;
+  color: #0a0a09;
+  font-size: 8px;
+  letter-spacing: 0;
 }
 
-.bag-label {
-  display: none;
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 38;
+  display: flex;
+  align-items: center;
+  padding: 96px clamp(24px, 8vw, 120px) 48px;
+  background: rgba(7, 7, 6, 0.97);
+  backdrop-filter: blur(10px);
+  overflow-y: auto;
+}
+.big {
+  display: block;
+  color: #f5f2eb;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(52px, 10vw, 128px);
+  letter-spacing: -0.04em;
+  line-height: 1;
+  text-decoration: none;
+  transition: color 300ms ease, transform 500ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.big:hover {
+  color: #c9a96b;
+  transform: translateX(14px);
+}
+.scents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 34px;
+  margin-top: 44px;
+  padding-top: 28px;
+  border-top: 1px solid rgba(245, 242, 235, 0.12);
+}
+.scents a {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #a69e90;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: color 250ms ease;
+}
+.scents a:hover {
+  color: #f5f2eb;
+}
+.scents i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
 }
 
-@media (min-width: 900px) {
-  .bag-label {
-    display: inline;
+.menu-enter-active,
+.menu-leave-active {
+  transition: opacity 450ms ease;
+}
+.menu-enter-from,
+.menu-leave-to {
+  opacity: 0;
+}
+.menu-enter-active .big,
+.menu-enter-active .scents {
+  transition: opacity 800ms cubic-bezier(0.16, 1, 0.3, 1) calc(var(--i, 2) * 80ms + 120ms),
+    transform 800ms cubic-bezier(0.16, 1, 0.3, 1) calc(var(--i, 2) * 80ms + 120ms);
+}
+.menu-enter-from .big,
+.menu-enter-from .scents {
+  opacity: 0;
+  transform: translateY(36px);
+}
+@media (max-width: 640px) {
+  .bar {
+    height: 64px;
   }
-}
-
-@media (max-width: 680px) {
-  .navigation-shell {
-    width: calc(100% - 32px);
-    height: 72px;
-    grid-template-columns: 1fr auto;
+  .brand-mark span {
+    font-size: 19px;
   }
-
-  .primary-nav {
+  .actions {
+    gap: 14px;
+  }
+  .menu-btn span:last-child {
     display: none;
   }
-
-  .brand-mark {
-    align-items: flex-start;
-  }
-
-  .brand-mark span {
-    font-size: 24px;
-  }
-
-  .brand-mark small {
-    font-size: 6px;
-  }
-
-  .nav-actions {
-    gap: 11px;
-  }
-
-  .locale-action {
-    font-size: 8px;
-  }
-
 }
 </style>

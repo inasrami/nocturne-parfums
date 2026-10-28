@@ -16,7 +16,8 @@ const routes = [
 export const router = createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior() {
-    return { top: 0 };
+  // wait for the page fade-out before jumping to the top
+  scrollBehavior(to, from, saved) {
+    return new Promise((resolve) => setTimeout(() => resolve(saved || { top: 0 }), 380));
   },
 });
