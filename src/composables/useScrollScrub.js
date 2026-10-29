@@ -10,7 +10,7 @@ const headerHeight = () => 0; // header is fixed and overlays the stage
  * Pins `sectionRef` and reports smoothed scroll progress (0..1) every frame.
  * Used by the home hero and the product notes stage.
  */
-export function useScrollScrub(sectionRef, { distance, onProgress, enabled = () => true }) {
+export function useScrollScrub(sectionRef, { distance, onProgress, enabled = () => true, snap = false }) {
   let trigger;
   let tick;
   const state = { target: 0, current: 0 };
@@ -24,6 +24,7 @@ export function useScrollScrub(sectionRef, { distance, onProgress, enabled = () 
       pin: true,
       anticipatePin: 1,
       invalidateOnRefresh: true,
+      snap,
       onUpdate: (self) => (state.target = self.progress),
     });
     tick = () => {
@@ -53,5 +54,6 @@ export function seek(video, p) {
   if (Math.abs(video.currentTime - t) > 0.02) video.currentTime = t;
 }
 
+export const easeInOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
 export const ramp = (t, a, b) => Math.min(1, Math.max(0, (t - a) / (b - a)));
 export const isReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;

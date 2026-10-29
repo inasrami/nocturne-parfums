@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from "vue";
 import { useShopStore } from "../../stores/shopStore";
-import { useScrollScrub, seek, ramp, isReducedMotion } from "../../composables/useScrollScrub";
+import { useScrollScrub, seek, ramp, easeInOut, isReducedMotion } from "../../composables/useScrollScrub";
 
 const props = defineProps({ product: { type: Object, required: true } });
 const store = useShopStore();
@@ -15,7 +15,7 @@ const isStatic = ref(isReducedMotion());
 
 // Scrolling sprays the bottle (idle -> spray clip) and reveals top, heart and base notes in turn.
 function onProgress(p) {
-  seek(video.value, p);
+  seek(video.value, easeInOut(p));
   groups.forEach((el, i) => {
     if (!el) return;
     const o = ramp(p, 0.12 + i * 0.28, 0.27 + i * 0.28);

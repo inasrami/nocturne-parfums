@@ -1,19 +1,21 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, ref } from "vue";
 import { ArrowRight } from "lucide-vue-next";
 import { useShopStore } from "../../stores/shopStore";
-import { useScrollScrub, seek, ramp, isReducedMotion } from "../../composables/useScrollScrub";
+import { useScrollScrub, seek, ramp, easeInOut, isReducedMotion } from "../../composables/useScrollScrub";
 
 const store = useShopStore();
 const perfumes = computed(() => store.perfumes);
 const P = computed(() => perfumes.value.length);
 
-// Timeline: 2 segments per perfume.
-//   even segment (spray_k): scrubs that perfume's idle -> spray video
-//   odd segment  (swap_k):  canvas mist grows over the end frame, the next perfume's idle still
-//                           takes over at the mist peak, then the mist clears. Last swap loops to perfume 0.
+// Each scroll "advance" moves from one perfume at rest to the next:
+//   0.0 - 0.5  the bottle sprays (idle -> spray clip, eased)
+//   0.5 - 1.0  the spray frame dissolves into the next bottle at rest (eased, with a soft drift)
+// Scroll snaps to each resting state, so one gentle scroll plays the whole move on its own timing.
+const GLOW = 0.22; // soft accent light during the dissolve; set to 0 to remove
+
 const section = ref(null);
-const canvas = ref(null);
+const glow = ref(null);
 const hint = ref(null);
 const videos = [];
 const idles = [];
@@ -21,134 +23,89 @@ const names = [];
 const active = ref(0);
 const fallback = ref(isReducedMotion());
 
-let ctx;
-let resizeObserver;
-let shownKey = "";
-let drawnKey = "";
-
-// ---- Mist -------------------------------------------------------------------------------------
-const rnd = (n) => {
-  const x = Math.sin(n * 127.1) * 43758.5453;
-  return x - Math.floor(x);
-};
-const blobs = Array.from({ length: 26 }, (_, i) => ({
-  x: 0.26 + 0.14 * rnd(i), // start near the nozzle (left third)
-  y: 0.4 + 0.2 * rnd(i + 50),
-  dx: 0.25 + 0.6 * rnd(i + 100), // drift to the right
-  dy: (rnd(i + 150) - 0.5) * 0.3,
-  r: 0.06 + 0.08 * rnd(i + 200),
-  grow: 0.15 + 0.35 * rnd(i + 250),
-  delay: 0.25 * rnd(i + 300),
-}));
 const hexToRgb = (hex) => {
   const n = parseInt(hex.slice(1), 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 };
 
-function resize() {
-  const c = canvas.value;
-  if (!c) return;
-  c.width = Math.round(c.clientWidth * 0.5); // mist is soft, half resolution is plenty
-  c.height = Math.round(c.clientHeight * 0.5);
-  drawnKey = "";
-}
-
-function clearMist() {
-  if (!ctx || drawnKey === "off") return;
-  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  drawnKey = "off";
-}
-
-function drawMist(s, from, to) {
-  if (!ctx) return;
-  const key = `${from}-${to}-${s.toFixed(3)}`;
-  if (key === drawnKey) return;
-  drawnKey = key;
-
-  const { width: w, height: h } = ctx.canvas;
-  ctx.clearRect(0, 0, w, h);
-  const env = s < 0.5 ? s * 2 : (1 - s) * 2; // 0 -> 1 at the swap point -> 0
-  if (env <= 0.002) return;
-
-  const a = hexToRgb(perfumes.value[from].accentColor);
-  const b = hexToRgb(perfumes.value[to].accentColor);
-  const [r, g, bl] = a.map((v, i) => Math.round(v + (b[i] - v) * s));
-  const m = Math.max(w, h);
-
-  // Dense tinted cover that hides the swap, then glowing plumes on top.
-  ctx.fillStyle = `rgba(${(r * 0.45) | 0},${(g * 0.45) | 0},${(bl * 0.45) | 0},${env ** 2.2 * 0.96})`;
-  ctx.fillRect(0, 0, w, h);
-
-  for (const o of blobs) {
-    const u = Math.min(1, Math.max(0, (s - o.delay) / (1 - o.delay)));
-    const x = (o.x + o.dx * u) * w;
-    const y = (o.y + o.dy * u) * h;
-    const rad = (o.r + o.grow * u) * m;
-    const grad = ctx.createRadialGradient(x, y, 0, x, y, rad);
-    grad.addColorStop(0, `rgba(${r},${g},${bl},${0.55 * env})`);
-    grad.addColorStop(0.5, `rgba(${r},${g},${bl},${0.25 * env})`);
-    grad.addColorStop(1, `rgba(${r},${g},${bl},0)`);
-    ctx.fillStyle = grad;
-    ctx.fillRect(x - rad, y - rad, rad * 2, rad * 2);
-  }
-}
-
-onMounted(() => {
-  if (!canvas.value) return;
-  ctx = canvas.value.getContext("2d");
-  resizeObserver = new ResizeObserver(resize);
-  resizeObserver.observe(canvas.value);
-});
-onBeforeUnmount(() => resizeObserver?.disconnect());
-
-// ---- Scroll -----------------------------------------------------------------------------------
 function onProgress(p) {
-  const n = P.value * 2;
-  const t = p * n;
-  const seg = Math.min(n - 1, Math.floor(t));
-  const local = t - seg;
-  const k = seg >> 1;
-  const swap = seg % 2 === 1;
-  const next = (k + 1) % P.value;
+  const last = P.value - 1;
+  const u = p * last;
+  const a = Math.min(last - 1, Math.floor(u));
+  const next = a + 1;
+  const l = u - a;
+  const s = easeInOut(ramp(l, 0, 0.5));
+  const d = easeInOut(ramp(l, 0.5, 1));
 
-  // Exactly one layer is visible: video k, or (after the mist peak) the next perfume's idle still.
-  const key = !swap || local < 0.5 ? `v${k}` : `i${next}`;
-  if (key !== shownKey) {
-    shownKey = key;
-    videos.forEach((v, i) => v && (v.style.opacity = key === `v${i}` ? 1 : 0));
-    idles.forEach((im, i) => im && (im.style.opacity = key === `i${i}` ? 1 : 0));
+  perfumes.value.forEach((_, k) => {
+    const v = videos[k];
+    const im = idles[k];
+    if (!v || !im) return;
+    let vo = 0;
+    let io = 0;
+    let vt = "none";
+    let vf = "none";
+    let it = "none";
+    let iff = "none";
+    if (k === a) {
+      io = l < 0.5 ? 1 : 0;
+      vo = l < 0.5 ? (s > 0.001 ? 1 : 0) : 1 - d;
+      if (d > 0) {
+        vt = `translate3d(${-2.5 * d}%,0,0) scale(${1 + 0.04 * d})`;
+        vf = `blur(${6 * d}px)`;
+      }
+    } else if (k === next) {
+      io = Math.min(1, d * 1.45);
+      if (d < 1) {
+        it = `translate3d(${2.5 * (1 - d)}%,0,0) scale(${1 + 0.05 * (1 - d)})`;
+        iff = `blur(${8 * (1 - d)}px)`;
+      }
+    }
+    v.style.opacity = vo;
+    v.style.transform = vt;
+    v.style.filter = vf;
+    im.style.opacity = io;
+    im.style.transform = it;
+    im.style.filter = iff;
+  });
+  seek(videos[a], s);
+
+  if (glow.value) {
+    const from = hexToRgb(perfumes.value[a].accentColor);
+    const to = hexToRgb(perfumes.value[next].accentColor);
+    const c = from.map((x, i) => Math.round(x + (to[i] - x) * d));
+    glow.value.style.setProperty("--g", `rgb(${c[0]},${c[1]},${c[2]})`);
+    glow.value.style.opacity = Math.sin(Math.PI * d) * GLOW;
   }
 
-  if (!swap) {
-    seek(videos[k], local);
-    clearMist();
-  } else {
-    if (local < 0.5) seek(videos[k], 1);
-    drawMist(local, k, next);
-  }
-
-  // A name arrives while the mist peaks and leaves at the start of its own swap.
+  // A name arrives during the dissolve and leaves as the next spray begins.
   let best = 0;
   let bestOpacity = -1;
-  names.forEach((el, i) => {
+  names.forEach((el, k) => {
     if (!el) return;
-    const leaves = 1 - ramp(t, 2 * i + 1, 2 * i + 1.4);
-    const arrivalStart = (i === 0 ? 2 * P.value - 1 : 2 * (i - 1) + 1) + 0.45;
-    const arrives = ramp(t, arrivalStart, arrivalStart + 0.35);
-    const o = i === 0 ? Math.min(1, leaves + arrives) : arrives * leaves;
+    const arrives = k === 0 ? 1 : ramp(u, k - 1 + 0.62, k - 1 + 0.9);
+    const leaves = k === last ? 1 : 1 - ramp(u, k + 0.28, k + 0.5);
+    const o = arrives * leaves;
     el.style.opacity = o;
     el.style.transform = `translateY(${(1 - o) * 18}px)`;
     el.style.pointerEvents = o > 0.6 ? "auto" : "none";
-    if (o > bestOpacity) [best, bestOpacity] = [i, o];
+    if (o > bestOpacity) [best, bestOpacity] = [k, o];
   });
   active.value = best;
   if (hint.value) hint.value.style.opacity = 1 - ramp(p, 0, 0.03);
 }
 
 const scrub = useScrollScrub(section, {
-  distance: () => window.innerHeight * P.value * 2 * (window.innerWidth < 768 ? 0.6 : 0.8),
+  distance: () => window.innerHeight * (P.value - 1) * (window.innerWidth < 768 ? 0.8 : 1),
   onProgress,
   enabled: () => !fallback.value,
+  snap: {
+    snapTo: 1 / (P.value - 1),
+    directional: true,
+    duration: { min: 0.5, max: 1.4 },
+    delay: 0.08,
+    ease: "power2.inOut",
+  },
 });
 
 function useFallback() {
@@ -176,22 +133,8 @@ const skip = () => document.getElementById("collection")?.scrollIntoView({ behav
       </li>
     </ul>
 
-    <!-- Scroll-scrubbed version -->
+    <!-- Scroll-driven version: stills sit under the videos so a dissolve reveals the next bottle -->
     <div v-if="!fallback" class="stage">
-      <video
-        v-for="(p, i) in perfumes"
-        :key="`v-${p.id}`"
-        :ref="(el) => (videos[i] = el)"
-        :src="`/hero/${p.id}-spray.mp4`"
-        :poster="`/hero/${p.id}-idle.jpg`"
-        muted
-        playsinline
-        preload="auto"
-        disablepictureinpicture
-        tabindex="-1"
-        aria-hidden="true"
-        @error="useFallback"
-      />
       <img
         v-for="(p, i) in perfumes"
         :key="`i-${p.id}`"
@@ -202,7 +145,20 @@ const skip = () => document.getElementById("collection")?.scrollIntoView({ behav
         aria-hidden="true"
         @error="hide"
       />
-      <canvas ref="canvas" class="mist" aria-hidden="true" />
+      <video
+        v-for="(p, i) in perfumes"
+        :key="`v-${p.id}`"
+        :ref="(el) => (videos[i] = el)"
+        :src="`/hero/${p.id}-spray.mp4`"
+        muted
+        playsinline
+        preload="auto"
+        disablepictureinpicture
+        tabindex="-1"
+        aria-hidden="true"
+        @error="useFallback"
+      />
+      <div ref="glow" class="glow" />
       <div class="shade" />
 
       <span class="overline brand">NOCTURNE · SOFIA</span>
@@ -282,12 +238,17 @@ const skip = () => document.getElementById("collection")?.scrollIntoView({ behav
 .name-block {
   opacity: 0;
 }
-.mist {
+.stage video,
+.stage > img.idle {
+  will-change: opacity, transform, filter;
+}
+.glow {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
   pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(60% 70% at 30% 52%, var(--g, #c9a96b), transparent 70%);
+  mix-blend-mode: screen;
 }
 .fallback .name-block {
   opacity: 1;
